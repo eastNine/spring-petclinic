@@ -1,0 +1,38 @@
+{
+    "variables": {
+        "client_id": "{{env `ARM_CLIENT_ID`}}",
+        "client_secret": "{{env `ARM_CLIENT_SECRET`}}",
+        "subscription_id": "{{env `ARM_SUBSCRIPTION_ID`}}",
+        "resource_group": "{{env `ARM_IMAGE_RESOURCEGROUP_ID`}}"
+    },
+    "builders": [{
+        "type": "azure-chroot",
+
+        "image_resource_id": "/subscriptions/{{vm `subscription_id`}}/resourceGroups/{{vm `resource_group`}}/providers/Microsoft.Compute/images/MyTestOSImage-{{timestamp}}",
+        "source": "credativ:Debian:9:latest"
+    }],
+    "provisioners": [{
+            "type": "file",
+            "source": "./install.sh",
+            "destination": "/home/azureuser/"
+        },
+        {
+            "type": "file",
+            "source": "./runServer.sh",
+            "destination": "/home/azureuser/"
+        },
+        {
+            "type": "file",
+            "source": "./sampleapp.service",
+            "destination": "/home/azureuser/"
+        },
+        {
+            "type": "shell",
+            "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+            "scripts": [
+                "cd /home/azureuser",
+                "./install.sh"
+            ]
+        }
+    ]
+}
