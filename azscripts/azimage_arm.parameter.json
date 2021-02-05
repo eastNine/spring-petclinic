@@ -1,0 +1,20 @@
+{
+    "client_id":"<AzureAD App registration ID>",
+    "client_secret":"<AzureAD App registration key>",
+    "subscription_id":"<Azure Subscription ID>",
+    "tenant_id":"<AzureAD Tenant ID>",
+    "object_id":"<AzureAD App registration Object ID>",
+    "resource_group":"jh.sa2",
+    "storage_account":"jhsastorage",
+    "image_publisher":"Canonical",
+    "image_offer":"UbuntuServer",
+    "image_sku":"18.04-LTS",
+    "location":"koreacentral",
+    "script_relative_path":"install.sh",
+    "script_arguments":"",
+    "package_path":"",
+    "package_name":"spring-petclinic",
+    "capture_name_prefix":"wmp",
+    "skip_clean":"false",
+    "managed_image_name":"jh.sa2-image-{{timestamp}}"
+}
