@@ -29,7 +29,6 @@
         "image_publisher": "{{user `image_publisher`}}",
         "image_offer": "{{user `image_offer`}}",
         "image_sku": "{{user `image_sku`}}",
-        "location": "{{user `location`}}",
         "vm_size": "Standard_D2s_v3"
     }],
     "provisioners": [{
