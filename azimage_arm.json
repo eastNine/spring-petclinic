@@ -17,12 +17,14 @@
     "package_name": "{{env `package_name`}}",
     "capture_name_prefix": "{{env `capture_name_prefix`}}",
     "skip_clean": "{{env `skip_clean`}}",
-    "managed_image_name": "{{env `managed_image_name`}}"
+    "managed_image_name": "{{env `managed_image_name`}}",
+    "build_resource_group_name": "{{ user `resource_group` }}"
   },
   "builders": [{
         "type": "azure-arm",
         "managed_image_resource_group_name": "{{user `resource_group`}}",
         "managed_image_name": "{{user `managed_image_name`}}",
+        "build_resource_group_name": "{{ user `build_resource_group_name` }}",
         "os_type": "Linux",
         "image_publisher": "{{user `image_publisher`}}",
         "image_offer": "{{user `image_offer`}}",
