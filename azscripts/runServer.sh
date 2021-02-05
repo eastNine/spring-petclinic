@@ -1,3 +1,4 @@
 #!/bin/bash
-cd /home/ubuntu/sampleapp
+APPLICATION_NAME=spring-petclinic
+cd /opt/$APPLICATION_NAME
 java -jar spring-petclinic.jar
