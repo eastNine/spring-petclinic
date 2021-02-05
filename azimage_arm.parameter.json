@@ -12,7 +12,7 @@
     "location":"koreacentral",
     "script_relative_path":"install.sh",
     "script_arguments":"",
-    "package_path":"",
+    "package_path":"./azscripts",
     "package_name":"spring-petclinic",
     "capture_name_prefix":"wmp",
     "skip_clean":"false",
