@@ -4,7 +4,7 @@ set -e
 
 # JDK
 sudo apt-get update
-sudo apt install -y default-jdk
+sudo apt install -y openjdk-8-jdk
 
 # Time Zone
 sudo timedatectl set-timezone Asia/Seoul
