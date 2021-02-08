@@ -10,6 +10,7 @@ DEPLOYDIRECTORY=/opt/$APPLICATION_NAME
 ls -al /deployTemp/$APPLICATION_NAME
 
 # JDK
+sudo add-apt-repository universe
 sudo apt-get update
 sudo apt install -y openjdk-8-jdk
 
