@@ -1,46 +1,45 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-      "vmSku": {
-        "value": "Standard_D2s_v3"
-      },
-      "vmssName": {
-        "value": "##VMSS_NAME##"
-      },
-      "serviceName": {
-        "value": "dev-infratest"
-      },
-      "capacity": {
-        "value": 2
-      },
-      "adminUsername": {
-        "value": "azureuser"
-      },
-      "administratorPublicKey": {
-        "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDty2HnhSZDkW8W4ZiC8S3R5wNahNujNk33ZvkXpxvC/jUUnwtuO0d/YKboF3G1OBKzxP6pN+06IUqQKIZ/OpgESVAC3WIfghL6Gie1xaRFdoRMy+sn+w26+XaAmjZsBCkhzI0g4UfPesH9IT6RXEK+PnPdwd3qFJtfSPBLxRSSLSfR+EINtBhpK4mdujLKslKksfAh9czUCo0VIbuk31aCxpfjobmDV2jL4RfoCCgNLkKjpRtXzDpE/1HNVobRMyN+LoVnTARQqAiPSKIQ5bPYUoL7VqGTeoZ5oIQWzAmmSJF5SlxoWHxU4yDOWrwvjW+YG6xV1z9350zRc7dWCWy9OVxF/h2ooe2ne5EsMIO6l6HygKYkzDzgo+jS8i7h+DwknAMDqnTi5ZqIsYdtR70sYOTABEJB/f9+OBrHhba6sDQMt3h0f/Im62JZZgO1rikZwyqXAyhZkmAEH4IMLv09bkG3IwQJ89lQMRAnttdHBSetMJPcv1EM6vxXbXwYIP8= generated-by-azure"
-      },
-      "location": {
-        "value": "koreacentral"
-      },
-      "imageName": {
-        "value": "##IMAGE_NAME##"
-      },
-      "bepoolName": {
-        "value": "blue"
-      },
-      "tag_name": {
-        "value": "name"
-      },
-      "tag_service": {
-        "value": "service"
-      },
-      "tag_usecase": {
-        "value": "usecase"
-      },
-      "tag_billing": {
-        "value": "billing"
-      }
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmSku": {
+      "value": "Standard_D2s_v3"
+    },
+    "vmssName": {
+      "value": "##VMSS_NAME##"
+    },
+    "serviceName": {
+      "value": "dev-infratest"
+    },
+    "capacity": {
+      "value": 2
+    },
+    "adminUsername": {
+      "value": "azureuser"
+    },
+    "administratorPublicKey": {
+      "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDty2HnhSZDkW8W4ZiC8S3R5wNahNujNk33ZvkXpxvC/jUUnwtuO0d/YKboF3G1OBKzxP6pN+06IUqQKIZ/OpgESVAC3WIfghL6Gie1xaRFdoRMy+sn+w26+XaAmjZsBCkhzI0g4UfPesH9IT6RXEK+PnPdwd3qFJtfSPBLxRSSLSfR+EINtBhpK4mdujLKslKksfAh9czUCo0VIbuk31aCxpfjobmDV2jL4RfoCCgNLkKjpRtXzDpE/1HNVobRMyN+LoVnTARQqAiPSKIQ5bPYUoL7VqGTeoZ5oIQWzAmmSJF5SlxoWHxU4yDOWrwvjW+YG6xV1z9350zRc7dWCWy9OVxF/h2ooe2ne5EsMIO6l6HygKYkzDzgo+jS8i7h+DwknAMDqnTi5ZqIsYdtR70sYOTABEJB/f9+OBrHhba6sDQMt3h0f/Im62JZZgO1rikZwyqXAyhZkmAEH4IMLv09bkG3IwQJ89lQMRAnttdHBSetMJPcv1EM6vxXbXwYIP8= generated-by-azure"
+    },
+    "location": {
+      "value": "koreacentral"
+    },
+    "imageName": {
+      "value": "##IMAGE_NAME##"
+    },
+    "bepoolName": {
+      "value": "blue"
+    },
+    "tag_name": {
+      "value": "name"
+    },
+    "tag_service": {
+      "value": "service"
+    },
+    "tag_usecase": {
+      "value": "usecase"
+    },
+    "tag_billing": {
+      "value": "billing"
     }
-      
   }
+}

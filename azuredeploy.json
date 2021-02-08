@@ -1,561 +1,529 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-      "vmSku": {
-        "type": "string",
-        "defaultValue": "Standard_D2s_v3",
-        "metadata": {
-          "description": "Size of VMs in the VM Scale Set."
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualNetworks_dev_network_vnet_externalid": {
+      "defaultValue": "/subscriptions/a2fca15a-3d49-4e8f-bf6d-76fd4c0d455d/resourceGroups/dev-network/providers/Microsoft.Network/virtualNetworks/dev-network-vnet",
+      "type": "String"
+    },
+    "vmSku": {
+      "type": "string",
+      "defaultValue": "Standard_D2s_v3",
+      "metadata": {
+        "description": "Size of VMs in the VM Scale Set."
+      }
+    },
+    "vmssName": {
+      "type": "string",
+      "metadata": {
+        "description": "String used as a base for naming resources. Must be 3-61 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
+      },
+      "minLength": 3,
+      "maxLength": 61
+    },
+    "serviceName": {
+      "type": "string",
+      "metadata": {
+        "description": "String used as a base for naming resources. Must be 3-61 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
+      },
+      "minLength": 3,
+      "maxLength": 61
+    },
+    "capacity": {
+      "type": "int",
+      "metadata": {
+        "description": "Number of VM instances (20 or less)."
+      },
+      "defaultValue": 2,
+      "minValue": 1,
+      "maxValue": 20
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Admin username on all VMs."
+      }
+    },
+    "administratorPublicKey": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the SSH rsa public key file as a string. Use \"ssh-keygen -t rsa -b 2048\" to generate your SSH key pairs."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "imageName": {
+      "type": "string",
+      "metadata": {
+        "description": "Image Name"
+      }
+    },
+    "bepoolName": {
+      "type": "string",
+      "metadata": {
+        "description": "prod backend pool name"
+      }
+    },
+    "tag_name": {
+      "type": "string",
+      "metadata": {
+        "description": "resource name tag"
+      }
+    },
+    "tag_service": {
+      "type": "string",
+      "metadata": {
+        "description": "service tag"
+      }
+    },
+    "tag_usecase": {
+      "type": "string",
+      "metadata": {
+        "description": "usecase tag"
+      }
+    },
+    "tag_billing": {
+      "type": "string",
+      "metadata": {
+        "description": "billing tag"
+      }
+    }
+  },
+  "variables": {
+    "subnetName": "dev-tour",
+    "agwsubnetName": "dev-rnd",
+    "agwName": "[concat(parameters('serviceName'), '-agw')]",
+    "agwIpConfigName": "[concat(variables('agwName'), 'IpConfig')]",
+    "fepoolName": "[concat(variables('agwName'), 'fepool')]",
+    "feIpConfigName": "[concat(variables('fepoolName'), 'IpConfig')]",
+    "beHTTPSetting": "[concat(variables('agwName'), 'HTTPSetting')]",
+    "beHTTPListener": "[concat(variables('agwName'), 'HTTPListener')]",
+    "pipName": "[concat(parameters('serviceName'), '-pip')]",
+    "nicName": "[concat(parameters('serviceName'), '-nic')]",
+    "ipConfigName": "[concat(parameters('vmssName'), '-ipconfig')]",
+    "httpProbeName": "httpProbe",
+    "service": "service1",
+    "usecase": "usecase1",
+    "billing": "billing1"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('pipName')]",
+      "location": "[parameters('location')]",
+      "apiVersion": "2020-06-01",
+      "sku": {
+        "name": "Standard",
+        "tier": "Regional"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "publicIPAddressVersion": "IPv4",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('vmssName')]"
         }
       },
-      "vmssName": {
-        "type": "string",
-        "metadata": {
-          "description": "String used as a base for naming resources. Must be 3-61 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
+      "tags": {
+        "[parameters('tag_name')]": "publicIPAddresses",
+        "[parameters('tag_service')]": "[variables('service')]",
+        "[parameters('tag_usecase')]": "[variables('usecase')]",
+        "[parameters('tag_billing')]": "[variables('billing')]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/applicationGateways",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('agwName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
+      ],
+      "tags": {
+        "[parameters('tag_name')]": "Application Gateway",
+        "[parameters('tag_service')]": "[variables('service')]",
+        "[parameters('tag_usecase')]": "[variables('usecase')]",
+        "[parameters('tag_billing')]": "[variables('billing')]"
+      },
+      "properties": {
+        "sku": {
+          "name": "Standard_v2",
+          "tier": "Standard_v2"
         },
-        "minLength": 3,
-        "maxLength": 61
-      },
-      "serviceName": {
-        "type": "string",
-        "metadata": {
-          "description": "String used as a base for naming resources. Must be 3-61 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
-        },
-        "minLength": 3,
-        "maxLength": 61
-      },
-      "capacity": {
-        "type": "int",
-        "metadata": {
-          "description": "Number of VM instances (20 or less)."
-        },
-        "defaultValue": 2,
-        "minValue": 1,
-        "maxValue": 20
-      },
-      "adminUsername": {
-        "type": "string",
-        "metadata": {
-          "description": "Admin username on all VMs."
-        }
-      },
-      "administratorPublicKey": {
-        "type": "string",
-        "metadata": {
-          "description": "Specifies the SSH rsa public key file as a string. Use \"ssh-keygen -t rsa -b 2048\" to generate your SSH key pairs."
-        }
-      },
-      "location": {
-        "type": "string",
-        "defaultValue": "[resourceGroup().location]",
-        "metadata": {
-          "description": "Location for all resources."
-        }
-      },
-      "imageName": {
-        "type": "string",
-        "metadata": {
-          "description": "Image Name"
-        }
-      },
-      "bepoolName": {
-        "type": "string",
-        "metadata": {
-          "description": "prod backend pool name"
-        }
-      },
-      "tag_name": {
-        "type": "string",
-        "metadata": {
-          "description": "resource name tag"
-        }
-      },
-      "tag_service": {
-        "type": "string",
-        "metadata": {
-          "description": "service tag"
-        }
-      }, 
-      "tag_usecase": {
-        "type": "string",
-        "metadata": {
-          "description": "usecase tag"
-        }
-      },
-      "tag_billing": {
-        "type": "string",
-        "metadata": {
-          "description": "billing tag"
+        "gatewayIPConfigurations": [
+          {
+            "name": "[variables('agwIpConfigName')]",
+            "properties": {
+              "subnet": {
+                "id": "[concat(parameters('virtualNetworks_dev_network_vnet_externalid'), '/subnets/', variables('agwsubnetName'))]"
+              }
+            }
+          }
+        ],
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('feIpConfigName')]",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
+              }
+            }
+          }
+        ],
+        "frontendPorts": [
+          {
+            "name": "port_80",
+            "properties": {
+              "port": 80
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "blue"
+          },
+          {
+            "name": "green"
+          }
+        ],
+        "backendHttpSettingsCollection": [
+          {
+            "name": "[variables('beHTTPSetting')]",
+            "properties": {
+              "port": 8080,
+              "protocol": "Http",
+              "cookieBasedAffinity": "Disabled",
+              "connectionDraining": {
+                "enabled": true,
+                "drainTimeoutInSec": 300
+              },
+              "pickHostNameFromBackendAddress": true,
+              "requestTimeout": 20,
+              "probe": {
+                "id": "[resourceId('Microsoft.Network/applicationGateways/probes', variables('agwName'), variables('httpProbeName'))]"
+              }
+            }
+          }
+        ],
+        "httpListeners": [
+          {
+            "name": "[variables('beHTTPListener')]",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', variables('agwName'), variables('feIpConfigName'))]"
+              },
+              "frontendPort": {
+                "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', variables('agwName'), 'port_80')]"
+              },
+              "protocol": "Http",
+              "requireServerNameIndication": false
+            }
+          }
+        ],
+        "requestRoutingRules": [
+          {
+            "name": "HTTPRule",
+            "properties": {
+              "ruleType": "Basic",
+              "httpListener": {
+                "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', variables('agwName'), variables('beHTTPListener'))]"
+              },
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agwName'), if(equals(parameters('bepoolName'),'blue'),'green','blue'))]"
+              },
+              "backendHttpSettings": {
+                "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', variables('agwName'), variables('beHTTPSetting'))]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "[variables('httpProbeName')]",
+            "properties": {
+              "protocol": "Http",
+              "path": "/",
+              "interval": 30,
+              "timeout": 30,
+              "unhealthyThreshold": 3,
+              "pickHostNameFromBackendHttpSettings": true,
+              "minServers": 0,
+              "match": {}
+            }
+          }
+        ],
+        "enableHttp2": false,
+        "autoscaleConfiguration": {
+          "minCapacity": 0,
+          "maxCapacity": 10
         }
       }
-    
     },
-    "variables": {
-      "addressPrefix": "10.0.0.0/16",
-      "virtualNetworkName": "[concat(parameters('serviceName'), '-vnet')]",
-      "subnetPrefix": "10.0.0.0/24",
-      "subnetName": "[concat(parameters('serviceName'), '-subnet')]",
-      "agwsubnetPrefix": "10.0.1.0/24",
-      "agwsubnetName": "[concat(parameters('serviceName'), '-agwsubnet')]",
-      "agwName": "[concat(parameters('serviceName'), '-agw')]",
-      "agwIpConfigName": "[concat(variables('agwName'), 'IpConfig')]",
-      "fepoolName": "[concat(variables('agwName'), 'fepool')]",
-      "feIpConfigName": "[concat(variables('fepoolName'), 'IpConfig')]",
-      "beHTTPSetting": "[concat(variables('agwName'), 'HTTPSetting')]",
-      "beHTTPListener": "[concat(variables('agwName'), 'HTTPListener')]",
-      "pipName": "[concat(parameters('serviceName'), '-pip')]",
-      "nicName": "[concat(parameters('serviceName'), '-nic')]",
-      "ipConfigName": "[concat(parameters('vmssName'), '-ipconfig')]",
-      "httpProbeName": "httpProbe",
-      "service" : "service1",
-      "usecase" : "usecase1",
-      "billing" : "billing1"
-    },
-    "resources": [
-      {
-        "type": "Microsoft.Network/virtualNetworks",
-        "name": "[variables('virtualNetworkName')]",
-        "location": "[parameters('location')]",
-        "apiVersion": "2020-06-01",
-        "properties": {
-          "addressSpace": {
-            "addressPrefixes": [
-              "[variables('addressPrefix')]"
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[parameters('vmssName')]",
+      "location": "[parameters('location')]",
+      "apiVersion": "2020-06-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/applicationGateways', variables('agwName'))]"
+      ],
+      "tags": {
+        "[parameters('tag_name')]": "virtualMachineScaleSets",
+        "[parameters('tag_service')]": "[variables('service')]",
+        "[parameters('tag_usecase')]": "[variables('usecase')]",
+        "[parameters('tag_billing')]": "[variables('billing')]"
+      },
+      "sku": {
+        "name": "[parameters('vmSku')]",
+        "tier": "Standard",
+        "capacity": "[parameters('capacity')]"
+      },
+      "properties": {
+        "singlePlacementGroup": true,
+        "upgradePolicy": {
+          "mode": "Automatic"
+        },
+        "scaleInPolicy": {
+          "rules": ["Default"]
+        },
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "imageReference": {
+              "id": "[parameters('imageName')]"
+            }
+          },
+          "osProfile": {
+            "computerNamePrefix": "[parameters('vmssName')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": true,
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+                    "keyData": "[parameters('administratorPublicKey')]"
+                  }
+                ]
+              },
+              "provisionVMAgent": true
+            }
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[variables('nicName')]",
+                "properties": {
+                  "primary": true,
+                  "ipConfigurations": [
+                    {
+                      "name": "[variables('ipConfigName')]",
+                      "properties": {
+                        "subnet": {
+                          "id": "[concat(parameters('virtualNetworks_dev_network_vnet_externalid'), '/subnets/', variables('subnetName'))]"
+                        },
+                        "privateIPAddressVersion": "IPv4",
+                        "applicationGatewayBackendAddressPools": [
+                          {
+                            "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agwName'), parameters('bepoolName'))]"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
             ]
           },
-          "subnets": [
-            {
-              "name": "[variables('subnetName')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetPrefix')]"
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "healthRepairExtension",
+                "properties": {
+                  "autoUpgradeMinorVersion": false,
+                  "publisher": "Microsoft.ManagedServices",
+                  "type": "ApplicationHealthLinux",
+                  "typeHandlerVersion": "1.0",
+                  "settings": {
+                    "protocol": "http",
+                    "port": 8080,
+                    "requestPath": "/"
+                  }
+                }
               }
-            },
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+      "apiVersion": "2019-07-01",
+      "name": "[concat(parameters('vmssName'), '/healthRepairExtension')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('vmssName'))]"
+      ],
+      "properties": {
+        "provisioningState": "Succeeded",
+        "autoUpgradeMinorVersion": false,
+        "publisher": "Microsoft.ManagedServices",
+        "type": "ApplicationHealthLinux",
+        "typeHandlerVersion": "1.0",
+        "settings": {
+          "protocol": "http",
+          "port": 80,
+          "requestPath": "/"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2017-05-10",
+      "name": "kimsejun-20210204213937",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachineScaleSets/extensions', parameters('vmssName'), 'healthRepairExtension')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
             {
-              "name": "[variables('agwsubnetName')]",
+              "type": "Microsoft.Network/applicationGateways",
+              "apiVersion": "2020-06-01",
+              "name": "[variables('agwName')]",
+              "location": "[parameters('location')]",
+              "tags": {
+                "[parameters('tag_name')]": "Application Gateway",
+                "[parameters('tag_service')]": "[variables('service')]",
+                "[parameters('tag_usecase')]": "[variables('usecase')]",
+                "[parameters('tag_billing')]": "[variables('billing')]"
+              },
               "properties": {
-                "addressPrefix": "[variables('agwsubnetPrefix')]"
+                "sku": {
+                  "name": "Standard_v2",
+                  "tier": "Standard_v2"
+                },
+                "gatewayIPConfigurations": [
+                  {
+                    "name": "[variables('agwIpConfigName')]",
+                    "properties": {
+                      "subnet": {
+                        "id": "[concat(parameters('virtualNetworks_dev_network_vnet_externalid'), '/subnets/', variables('agwsubnetName'))]"
+                      }
+                    }
+                  }
+                ],
+                "frontendIPConfigurations": [
+                  {
+                    "name": "[variables('feIpConfigName')]",
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
+                      }
+                    }
+                  }
+                ],
+                "frontendPorts": [
+                  {
+                    "name": "port_80",
+                    "properties": {
+                      "port": 80
+                    }
+                  }
+                ],
+                "backendAddressPools": [
+                  {
+                    "name": "blue"
+                  },
+                  {
+                    "name": "green"
+                  }
+                ],
+                "backendHttpSettingsCollection": [
+                  {
+                    "name": "[variables('beHTTPSetting')]",
+                    "properties": {
+                      "port": 80,
+                      "protocol": "Http",
+                      "cookieBasedAffinity": "Disabled",
+                      "connectionDraining": {
+                        "enabled": true,
+                        "drainTimeoutInSec": 300
+                      },
+                      "pickHostNameFromBackendAddress": true,
+                      "requestTimeout": 20,
+                      "probe": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/probes', variables('agwName'), variables('httpProbeName'))]"
+                      }
+                    }
+                  }
+                ],
+                "httpListeners": [
+                  {
+                    "name": "[variables('beHTTPListener')]",
+                    "properties": {
+                      "frontendIPConfiguration": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', variables('agwName'), variables('feIpConfigName'))]"
+                      },
+                      "frontendPort": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', variables('agwName'), 'port_80')]"
+                      },
+                      "protocol": "Http",
+                      "requireServerNameIndication": false
+                    }
+                  }
+                ],
+                "requestRoutingRules": [
+                  {
+                    "name": "HTTPRule",
+                    "properties": {
+                      "ruleType": "Basic",
+                      "httpListener": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', variables('agwName'), variables('beHTTPListener'))]"
+                      },
+                      "backendAddressPool": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agwName'), parameters('bepoolName'))]"
+                      },
+                      "backendHttpSettings": {
+                        "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', variables('agwName'), variables('beHTTPSetting'))]"
+                      }
+                    }
+                  }
+                ],
+                "probes": [
+                  {
+                    "name": "[variables('httpProbeName')]",
+                    "properties": {
+                      "protocol": "Http",
+                      "path": "/",
+                      "interval": 30,
+                      "timeout": 30,
+                      "unhealthyThreshold": 3,
+                      "pickHostNameFromBackendHttpSettings": true,
+                      "minServers": 0,
+                      "match": {}
+                    }
+                  }
+                ],
+                "enableHttp2": false,
+                "autoscaleConfiguration": {
+                  "minCapacity": 0,
+                  "maxCapacity": 10
+                }
               }
             }
           ]
         }
-      },
-      {
-        "type": "Microsoft.Network/publicIPAddresses",
-        "name": "[variables('pipName')]",
-        "location": "[parameters('location')]",
-        "apiVersion": "2020-06-01",
-        "sku": {
-          "name": "Standard",
-          "tier": "Regional"
-        },
-        "properties": {
-          "publicIPAllocationMethod": "Static",
-          "publicIPAddressVersion": "IPv4",
-          "dnsSettings": {
-            "domainNameLabel": "[parameters('vmssName')]"
-          }
-        },
-        "tags": {
-          "[parameters('tag_name')]": "publicIPAddresses",
-          "[parameters('tag_service')]": "[variables('service')]",
-          "[parameters('tag_usecase')]": "[variables('usecase')]",
-          "[parameters('tag_billing')]": "[variables('billing')]"
-        }
-      },
-      {
-        "type": "Microsoft.Network/applicationGateways",
-        "apiVersion": "2020-06-01",
-        "name": "[variables('agwName')]",
-        "location": "[parameters('location')]",
-        "dependsOn": [
-          "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-          "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
-        ],
-        "tags": {
-          "[parameters('tag_name')]": "Application Gateway",
-          "[parameters('tag_service')]": "[variables('service')]",
-          "[parameters('tag_usecase')]": "[variables('usecase')]",
-          "[parameters('tag_billing')]": "[variables('billing')]"
-        },
-        "properties": {
-          "sku": {
-            "name": "Standard_v2",
-            "tier": "Standard_v2"
-          },
-          "gatewayIPConfigurations": [
-            {
-              "name": "[variables('agwIpConfigName')]",
-              "properties": {
-                "subnet": {
-                  "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('agwsubnetName'))]"
-                }
-              }
-            }
-          ],
-          "frontendIPConfigurations": [
-            {
-              "name": "[variables('feIpConfigName')]",
-              "properties": {
-                "privateIPAllocationMethod": "Dynamic",
-                "publicIPAddress": {
-                  "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
-                }
-              }
-            }
-          ],
-          "frontendPorts": [
-            {
-              "name": "port_80",
-              "properties": {
-                "port": 80
-              }
-            }
-          ],
-          "backendAddressPools": [
-            {
-              "name": "blue"
-            },
-            {
-              "name": "green"
-            }
-          ],
-          "backendHttpSettingsCollection": [
-            {
-              "name": "[variables('beHTTPSetting')]",
-              "properties": {
-                "port": 8080,
-                "protocol": "Http",
-                "cookieBasedAffinity": "Disabled",
-                "connectionDraining": {
-                  "enabled": true,
-                  "drainTimeoutInSec": 300
-                },
-                "pickHostNameFromBackendAddress": true,
-                "requestTimeout": 20,
-                "probe": {
-                  "id": "[resourceId('Microsoft.Network/applicationGateways/probes', variables('agwName'), variables('httpProbeName'))]"
-                }
-              }
-            }
-          ],
-          "httpListeners": [
-            {
-              "name": "[variables('beHTTPListener')]",
-              "properties": {
-                "frontendIPConfiguration": {
-                  "id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', variables('agwName'), variables('feIpConfigName'))]"
-                },
-                "frontendPort": {
-                  "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', variables('agwName'), 'port_80')]"
-                },
-                "protocol": "Http",
-                "requireServerNameIndication": false
-              }
-            }
-          ],
-          "requestRoutingRules": [
-            {
-              "name": "HTTPRule",
-              "properties": {
-                "ruleType": "Basic",
-                "httpListener": {
-                  "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', variables('agwName'), variables('beHTTPListener'))]"
-                },
-                "backendAddressPool": {
-                  "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agwName'), if(equals(parameters('bepoolName'),'blue'),'green','blue'))]"
-                },
-                "backendHttpSettings": {
-                  "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', variables('agwName'), variables('beHTTPSetting'))]"
-                }
-              }
-            }
-          ],
-          "probes": [
-            {
-              "name": "[variables('httpProbeName')]",
-              "properties": {
-                "protocol": "Http",
-                "path": "/",
-                "interval": 30,
-                "timeout": 30,
-                "unhealthyThreshold": 3,
-                "pickHostNameFromBackendHttpSettings": true,
-                "minServers": 0,
-                "match": {}
-              }
-            }
-          ],
-          "enableHttp2": false,
-          "autoscaleConfiguration": {
-            "minCapacity": 0,
-            "maxCapacity": 10
-          }
-        }
-      },
-      {
-        "type": "Microsoft.Compute/virtualMachineScaleSets",
-        "name": "[parameters('vmssName')]",
-        "location": "[parameters('location')]",
-        "apiVersion": "2020-06-01",
-        "dependsOn": [
-          "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-          "[resourceId('Microsoft.Network/applicationGateways', variables('agwName'))]"
-        ],
-        "tags": {
-          "[parameters('tag_name')]": "virtualMachineScaleSets",
-          "[parameters('tag_service')]": "[variables('service')]",
-          "[parameters('tag_usecase')]": "[variables('usecase')]",
-          "[parameters('tag_billing')]": "[variables('billing')]"
-        },
-        "sku": {
-          "name": "[parameters('vmSku')]",
-          "tier": "Standard",
-          "capacity": "[parameters('capacity')]"
-        },
-        "properties": {
-          "singlePlacementGroup": true,
-          "upgradePolicy": {
-            "mode": "Automatic"
-          },
-          "scaleInPolicy": {
-            "rules": [
-              "Default"
-            ]
-          },
-          "virtualMachineProfile": {
-            "storageProfile": {
-              "imageReference": {
-                "id": "[parameters('imageName')]"
-              }
-            },
-            "osProfile": {
-              "computerNamePrefix": "[parameters('vmssName')]",
-              "adminUsername": "[parameters('adminUsername')]",
-              "linuxConfiguration": {
-                "disablePasswordAuthentication": true,
-                "ssh": {
-                  "publicKeys": [
-                    {
-                      "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
-                      "keyData": "[parameters('administratorPublicKey')]"
-                    }
-                  ]
-                },
-                "provisionVMAgent": true
-              }
-            },
-            "networkProfile": {
-              "networkInterfaceConfigurations": [
-                {
-                  "name": "[variables('nicName')]",
-                  "properties": {
-                    "primary": true,
-                    "ipConfigurations": [
-                      {
-                        "name": "[variables('ipConfigName')]",
-                        "properties": {
-                          "subnet": {
-                            "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]"
-                          },
-                          "privateIPAddressVersion": "IPv4",
-                          "applicationGatewayBackendAddressPools": [
-                            {
-                              "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agwName'), parameters('bepoolName'))]"
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                }
-              ]
-            },
-            "extensionProfile": {
-              "extensions": [
-                {
-                "name": "healthRepairExtension",
-                "properties": {
-                    "autoUpgradeMinorVersion": false,
-                    "publisher": "Microsoft.ManagedServices",
-                    "type": "ApplicationHealthLinux",
-                    "typeHandlerVersion": "1.0",
-                    "settings": {
-                      "protocol": "http",
-                      "port": 8080,
-                      "requestPath": "/"
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      },
-      {
-        "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
-        "apiVersion": "2019-07-01",
-        "name": "[concat(parameters('vmssName'), '/healthRepairExtension')]",
-        "dependsOn": [
-          "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('vmssName'))]"
-        ],
-        "properties": {
-          "provisioningState": "Succeeded",
-          "autoUpgradeMinorVersion": false,
-          "publisher": "Microsoft.ManagedServices",
-          "type": "ApplicationHealthLinux",
-          "typeHandlerVersion": "1.0",
-          "settings": {
-            "protocol": "http",
-            "port": 80,
-            "requestPath": "/"
-          }
-        }
-      },
-      {
-        "type": "Microsoft.Resources/deployments",
-        "apiVersion": "2017-05-10",
-        "name": "kimsejun-20210204213937",
-        "dependsOn": [
-          "[resourceId('Microsoft.Compute/virtualMachineScaleSets/extensions', parameters('vmssName'), 'healthRepairExtension')]"
-        ],
-        "properties": {
-          "mode": "Incremental",
-          "template": {
-            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-            "contentVersion": "1.0.0.0",
-            "parameters": {},
-            "variables": {},
-            "resources": [
-              {
-                "type": "Microsoft.Network/applicationGateways",
-                "apiVersion": "2020-06-01",
-                "name": "[variables('agwName')]",
-                "location": "[parameters('location')]",
-                "tags": {
-                  "[parameters('tag_name')]": "Application Gateway",
-                  "[parameters('tag_service')]": "[variables('service')]",
-                  "[parameters('tag_usecase')]": "[variables('usecase')]",
-                  "[parameters('tag_billing')]": "[variables('billing')]"
-                },
-                "properties": {
-                  "sku": {
-                    "name": "Standard_v2",
-                    "tier": "Standard_v2"
-                  },
-                  "gatewayIPConfigurations": [
-                    {
-                      "name": "[variables('agwIpConfigName')]",
-                      "properties": {
-                        "subnet": {
-                          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('agwsubnetName'))]"
-                        }
-                      }
-                    }
-                  ],
-                  "frontendIPConfigurations": [
-                    {
-                      "name": "[variables('feIpConfigName')]",
-                      "properties": {
-                        "privateIPAllocationMethod": "Dynamic",
-                        "publicIPAddress": {
-                          "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
-                        }
-                      }
-                    }
-                  ],
-                  "frontendPorts": [
-                    {
-                      "name": "port_80",
-                      "properties": {
-                        "port": 80
-                      }
-                    }
-                  ],
-                  "backendAddressPools": [
-                    {
-                      "name": "blue"
-                    },
-                    {
-                      "name": "green"
-                    }
-                  ],
-                  "backendHttpSettingsCollection": [
-                    {
-                      "name": "[variables('beHTTPSetting')]",
-                      "properties": {
-                        "port": 80,
-                        "protocol": "Http",
-                        "cookieBasedAffinity": "Disabled",
-                        "connectionDraining": {
-                          "enabled": true,
-                          "drainTimeoutInSec": 300
-                        },
-                        "pickHostNameFromBackendAddress": true,
-                        "requestTimeout": 20,
-                        "probe": {
-                          "id": "[resourceId('Microsoft.Network/applicationGateways/probes', variables('agwName'), variables('httpProbeName'))]"
-                        }
-                      }
-                    }
-                  ],
-                  "httpListeners": [
-                    {
-                      "name": "[variables('beHTTPListener')]",
-                      "properties": {
-                        "frontendIPConfiguration": {
-                          "id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', variables('agwName'), variables('feIpConfigName'))]"
-                        },
-                        "frontendPort": {
-                          "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', variables('agwName'), 'port_80')]"
-                        },
-                        "protocol": "Http",
-                        "requireServerNameIndication": false
-                      }
-                    }
-                  ],
-                  "requestRoutingRules": [
-                    {
-                      "name": "HTTPRule",
-                      "properties": {
-                        "ruleType": "Basic",
-                        "httpListener": {
-                          "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', variables('agwName'), variables('beHTTPListener'))]"
-                        },
-                        "backendAddressPool": {
-                          "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agwName'), parameters('bepoolName'))]"
-                        },
-                        "backendHttpSettings": {
-                          "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', variables('agwName'), variables('beHTTPSetting'))]"
-                        }
-                      }
-                    }
-                  ],
-                  "probes": [
-                    {
-                      "name": "[variables('httpProbeName')]",
-                      "properties": {
-                        "protocol": "Http",
-                        "path": "/",
-                        "interval": 30,
-                        "timeout": 30,
-                        "unhealthyThreshold": 3,
-                        "pickHostNameFromBackendHttpSettings": true,
-                        "minServers": 0,
-                        "match": {}
-                      }
-                    }
-                  ],
-                  "enableHttp2": false,
-                  "autoscaleConfiguration": {
-                    "minCapacity": 0,
-                    "maxCapacity": 10
-                  }
-                }
-              }
-            ]
-          }
-        }
       }
-    ]
-  }
+    }
+  ]
+}
