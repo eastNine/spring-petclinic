@@ -27,7 +27,7 @@
       "value": "##IMAGE_NAME##"
     },
     "bepoolName": {
-      "value": "blue"
+      "value": "##BACKEND_POOL##"
     },
     "tag_name": {
       "value": "name"
