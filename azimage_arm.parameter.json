@@ -5,7 +5,7 @@
     "tenant_id":"<AzureAD Tenant ID>",
     "object_id":"<AzureAD App registration Object ID>",
     "resource_group":"dev-infratest",
-    "storage_account":"wmpinfrateststorage",
+    "storage_account":"devinfrateststorage",
     "image_publisher":"Canonical",
     "image_offer":"UbuntuServer",
     "image_sku":"18.04-LTS",
@@ -16,5 +16,6 @@
     "package_name":"spring-petclinic",
     "capture_name_prefix":"wmp",
     "skip_clean":"false",
-    "managed_image_name":"infratest-image-{{timestamp}}"
+    "managed_image_name":"infratest-image-{{timestamp}}",
+    "build_resource_group_name":"dev-infratest-packerbuild"
 }

@@ -18,7 +18,7 @@
         "capture_name_prefix": "{{env `capture_name_prefix`}}",
         "skip_clean": "{{env `skip_clean`}}",
         "managed_image_name": "{{env `managed_image_name`}}",
-        "build_resource_group_name": "{{ user `resource_group` }}"
+        "build_resource_group_name": "{{ user `build_resource_group_name` }}"
     },
     "builders": [{
         "type": "azure-arm",
