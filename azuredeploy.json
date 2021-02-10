@@ -383,7 +383,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
-      "name": "kimsejun-20210204213937",
+      "name": "[concat('SwitchAppGwTrafficTo-', parameters('bepoolName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachineScaleSets/extensions', parameters('vmssName'), 'healthRepairExtension')]"
       ],
