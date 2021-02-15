@@ -24,7 +24,7 @@ class WelcomeController {
 
 	@GetMapping("/")
 	public String welcome() {
-		return "welcome unhealthy test 20210215";
+		return "welcome";
 	}
 
 }
