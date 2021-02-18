@@ -10,7 +10,9 @@ DEPLOYDIRECTORY=/opt/$APPLICATION_NAME
 ls -al /deployTemp/$APPLICATION_NAME
 
 # JDK
-sudo add-apt-repository universe
+# https://www.packer.io/docs/other/debugging.html#issues-installing-ubuntu-packages
+while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init...'; sleep 1; done
+
 sudo apt-get update
 sudo apt install -y openjdk-8-jdk
 
