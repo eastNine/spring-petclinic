@@ -5,6 +5,9 @@
     "vmSku": {
       "value": "Standard_D2s_v3"
     },
+    "jobName": {
+      "value": "##JOB_NAME##"
+    },
     "vmssName": {
       "value": "##VMSS_NAME##"
     },

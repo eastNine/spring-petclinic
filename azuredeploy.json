@@ -13,6 +13,14 @@
         "description": "Size of VMs in the VM Scale Set."
       }
     },
+    "jobName": {
+      "type": "string",
+      "metadata": {
+        "description": "String used as a base for naming resources. Must be 3-61 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
+      },
+      "minLength": 3,
+      "maxLength": 61
+    },
     "vmssName": {
       "type": "string",
       "metadata": {
@@ -106,6 +114,8 @@
     "pipName": "[concat(parameters('serviceName'), '-pip')]",
     "nicName": "[concat(parameters('serviceName'), '-nic')]",
     "ipConfigName": "[concat(parameters('vmssName'), '-ipconfig')]",
+    "blueBackendPoolName": "[concat(parameters('jobName'), '-blue')]",
+    "greenBackendPoolName": "[concat(parameters('jobName'), '-green')]",
     "httpProbeName": "httpProbe",
     "service": "service1",
     "usecase": "usecase1",
@@ -185,10 +195,10 @@
         ],
         "backendAddressPools": [
           {
-            "name": "blue"
+            "name": "[variables('blueBackendPoolName')]"
           },
           {
-            "name": "green"
+            "name": "[variables('greenBackendPoolName')]"
           }
         ],
         "backendHttpSettingsCollection": [
@@ -221,6 +231,8 @@
                 "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', variables('agwName'), 'port_80')]"
               },
               "protocol": "Http",
+              "hostName": "[concat(parameters('jobName'), '.stg.wemakeprice.com')]",
+              "hostNames": [],
               "requireServerNameIndication": false
             }
           }
@@ -234,7 +246,7 @@
                 "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', variables('agwName'), variables('beHTTPListener'))]"
               },
               "backendAddressPool": {
-                "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agwName'), if(equals(parameters('bepoolName'),'blue'),'green','blue'))]"
+                "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agwName'), if(equals(parameters('bepoolName'),variables('blueBackendPoolName')),variables('greenBackendPoolName'),variables('blueBackendPoolName')))]"
               },
               "backendHttpSettings": {
                 "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', variables('agwName'), variables('beHTTPSetting'))]"
