@@ -21,6 +21,22 @@
       "minLength": 3,
       "maxLength": 61
     },
+    "agwRGName": {
+      "type": "string",
+      "metadata": {
+        "description": "String used as a base for naming resources. Must be 3-61 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
+      },
+      "minLength": 3,
+      "maxLength": 61
+    },
+    "agwName": {
+      "type": "string",
+      "metadata": {
+        "description": "String used as a base for naming resources. Must be 3-61 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
+      },
+      "minLength": 3,
+      "maxLength": 61
+    },
     "vmssName": {
       "type": "string",
       "metadata": {
@@ -105,12 +121,13 @@
   "variables": {
     "subnetName": "dev-tour",
     "agwsubnetName": "dev-rnd",
-    "agwName": "[concat(parameters('serviceName'), '-agw')]",
-    "agwIpConfigName": "[concat(variables('agwName'), 'IpConfig')]",
-    "fepoolName": "[concat(variables('agwName'), 'fepool')]",
+    //"agwName": "[concat(parameters('serviceName'), '-agw')]",
+    "agwIpConfigName": "[concat(parameters('agwName'), 'IpConfig')]",
+    "fepoolName": "[concat(parameters('agwName'), 'fepool')]",
     "feIpConfigName": "[concat(variables('fepoolName'), 'IpConfig')]",
-    "beHTTPSetting": "[concat(variables('agwName'), 'HTTPSetting')]",
-    "beHTTPListener": "[concat(variables('agwName'), 'HTTPListener')]",
+    "beHTTPSetting": "[concat('default', 'BeHTTPSetting')]",
+    "beHTTPListener": "[concat(parameters('jobName'), 'HTTPListener')]",
+    "agwRule": "[concat(parameters('jobName'), 'Rule')]",
     "pipName": "[concat(parameters('serviceName'), '-pip')]",
     "nicName": "[concat(parameters('serviceName'), '-nic')]",
     "ipConfigName": "[concat(parameters('vmssName'), '-ipconfig')]",
@@ -123,167 +140,13 @@
   },
   "resources": [
     {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('pipName')]",
-      "location": "[parameters('location')]",
-      "apiVersion": "2020-06-01",
-      "sku": {
-        "name": "Standard",
-        "tier": "Regional"
-      },
-      "properties": {
-        "publicIPAllocationMethod": "Static",
-        "publicIPAddressVersion": "IPv4",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('vmssName')]"
-        }
-      },
-      "tags": {
-        "[parameters('tag_name')]": "publicIPAddresses",
-        "[parameters('tag_service')]": "[variables('service')]",
-        "[parameters('tag_usecase')]": "[variables('usecase')]",
-        "[parameters('tag_billing')]": "[variables('billing')]"
-      }
-    },
-    {
-      "type": "Microsoft.Network/applicationGateways",
-      "apiVersion": "2020-06-01",
-      "name": "[variables('agwName')]",
-      "location": "[parameters('location')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
-      ],
-      "tags": {
-        "[parameters('tag_name')]": "Application Gateway",
-        "[parameters('tag_service')]": "[variables('service')]",
-        "[parameters('tag_usecase')]": "[variables('usecase')]",
-        "[parameters('tag_billing')]": "[variables('billing')]"
-      },
-      "properties": {
-        "sku": {
-          "name": "Standard_v2",
-          "tier": "Standard_v2"
-        },
-        "gatewayIPConfigurations": [
-          {
-            "name": "[variables('agwIpConfigName')]",
-            "properties": {
-              "subnet": {
-                "id": "[concat(parameters('virtualNetworks_dev_network_vnet_externalid'), '/subnets/', variables('agwsubnetName'))]"
-              }
-            }
-          }
-        ],
-        "frontendIPConfigurations": [
-          {
-            "name": "[variables('feIpConfigName')]",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
-              }
-            }
-          }
-        ],
-        "frontendPorts": [
-          {
-            "name": "port_80",
-            "properties": {
-              "port": 80
-            }
-          }
-        ],
-        "backendAddressPools": [
-          {
-            "name": "[variables('blueBackendPoolName')]"
-          },
-          {
-            "name": "[variables('greenBackendPoolName')]"
-          }
-        ],
-        "backendHttpSettingsCollection": [
-          {
-            "name": "[variables('beHTTPSetting')]",
-            "properties": {
-              "port": 8080,
-              "protocol": "Http",
-              "cookieBasedAffinity": "Disabled",
-              "connectionDraining": {
-                "enabled": true,
-                "drainTimeoutInSec": 300
-              },
-              "pickHostNameFromBackendAddress": true,
-              "requestTimeout": 20,
-              "probe": {
-                "id": "[resourceId('Microsoft.Network/applicationGateways/probes', variables('agwName'), variables('httpProbeName'))]"
-              }
-            }
-          }
-        ],
-        "httpListeners": [
-          {
-            "name": "[variables('beHTTPListener')]",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', variables('agwName'), variables('feIpConfigName'))]"
-              },
-              "frontendPort": {
-                "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', variables('agwName'), 'port_80')]"
-              },
-              "protocol": "Http",
-              "hostName": "[concat(parameters('jobName'), '.stg.wemakeprice.com')]",
-              "hostNames": [],
-              "requireServerNameIndication": false
-            }
-          }
-        ],
-        "requestRoutingRules": [
-          {
-            "name": "HTTPRule",
-            "properties": {
-              "ruleType": "Basic",
-              "httpListener": {
-                "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', variables('agwName'), variables('beHTTPListener'))]"
-              },
-              "backendAddressPool": {
-                "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agwName'), if(equals(parameters('bepoolName'),variables('blueBackendPoolName')),variables('greenBackendPoolName'),variables('blueBackendPoolName')))]"
-              },
-              "backendHttpSettings": {
-                "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', variables('agwName'), variables('beHTTPSetting'))]"
-              }
-            }
-          }
-        ],
-        "probes": [
-          {
-            "name": "[variables('httpProbeName')]",
-            "properties": {
-              "protocol": "Http",
-              "path": "/",
-              "interval": 30,
-              "timeout": 30,
-              "unhealthyThreshold": 3,
-              "pickHostNameFromBackendHttpSettings": true,
-              "minServers": 0,
-              "match": {}
-            }
-          }
-        ],
-        "enableHttp2": false,
-        "autoscaleConfiguration": {
-          "minCapacity": 0,
-          "maxCapacity": 10
-        }
-      }
-    },
-    {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "name": "[parameters('vmssName')]",
       "location": "[parameters('location')]",
       "apiVersion": "2020-06-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/applicationGateways', variables('agwName'))]"
-      ],
+      // "dependsOn": [
+      //   "[resourceId('Microsoft.Network/applicationGateways', parameters('agwName'))]"
+      // ],
       "tags": {
         "[parameters('tag_name')]": "virtualMachineScaleSets",
         "[parameters('tag_service')]": "[variables('service')]",
@@ -341,7 +204,7 @@
                         "privateIPAddressVersion": "IPv4",
                         "applicationGatewayBackendAddressPools": [
                           {
-                            "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('agwName'), parameters('bepoolName'))]"
+                            "id": "[resourceId('a2fca15a-3d49-4e8f-bf6d-76fd4c0d455d',parameters('agwRGName'),'Microsoft.Network/applicationGateways/backendAddressPools', parameters('agwName'), parameters('bepoolName'))]"
                           }
                         ]
                       }

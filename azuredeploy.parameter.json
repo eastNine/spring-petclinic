@@ -14,6 +14,12 @@
     "serviceName": {
       "value": "dev-infratest"
     },
+    "agwRGName": {
+      "value": "dev-infratest-agw"
+    },
+    "agwName": {
+      "value": "dev-infratest-agw-agw"
+    },
     "capacity": {
       "value": 2
     },
