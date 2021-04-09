@@ -16,6 +16,6 @@
     "package_name":"spring-petclinic",
     "capture_name_prefix":"wmp",
     "skip_clean":"false",
-    "managed_image_name":"infratest-image-{{timestamp}}",
+    "managed_image_name":"spring-petclinic-image-{{timestamp}}",
     "build_resource_group_name":"dev-infratest-packerbuild"
 }
