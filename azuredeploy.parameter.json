@@ -5,20 +5,14 @@
     "vmSku": {
       "value": "Standard_D2s_v3"
     },
-    "jobName": {
-      "value": "##JOB_NAME##"
-    },
     "vmssName": {
       "value": "##VMSS_NAME##"
     },
-    "serviceName": {
-      "value": "dev-infratest"
-    },
     "agwRGName": {
-      "value": "dev-infratest-agw"
+      "value": "##APPGW_RG##"
     },
     "agwName": {
-      "value": "dev-infratest-agw-agw"
+      "value": "##APPGW_NAME##"
     },
     "capacity": {
       "value": 2

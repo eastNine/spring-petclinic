@@ -13,14 +13,6 @@
         "description": "Size of VMs in the VM Scale Set."
       }
     },
-    "jobName": {
-      "type": "string",
-      "metadata": {
-        "description": "String used as a base for naming resources. Must be 3-61 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
-      },
-      "minLength": 3,
-      "maxLength": 61
-    },
     "agwRGName": {
       "type": "string",
       "metadata": {
@@ -38,14 +30,6 @@
       "maxLength": 61
     },
     "vmssName": {
-      "type": "string",
-      "metadata": {
-        "description": "String used as a base for naming resources. Must be 3-61 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
-      },
-      "minLength": 3,
-      "maxLength": 61
-    },
-    "serviceName": {
       "type": "string",
       "metadata": {
         "description": "String used as a base for naming resources. Must be 3-61 characters in length and globally unique across Azure. A hash is prepended to this string for some resources, and resource-specific information is appended."
@@ -120,20 +104,8 @@
   },
   "variables": {
     "subnetName": "dev-tour",
-    "agwsubnetName": "dev-rnd",
-    //"agwName": "[concat(parameters('serviceName'), '-agw')]",
-    "agwIpConfigName": "[concat(parameters('agwName'), 'IpConfig')]",
-    "fepoolName": "[concat(parameters('agwName'), 'fepool')]",
-    "feIpConfigName": "[concat(variables('fepoolName'), 'IpConfig')]",
-    "beHTTPSetting": "[concat('default', 'BeHTTPSetting')]",
-    "beHTTPListener": "[concat(parameters('jobName'), 'HTTPListener')]",
-    "agwRule": "[concat(parameters('jobName'), 'Rule')]",
-    "pipName": "[concat(parameters('serviceName'), '-pip')]",
-    "nicName": "[concat(parameters('serviceName'), '-nic')]",
+    "nicName": "[concat(parameters('vmssName'), '-nic')]",
     "ipConfigName": "[concat(parameters('vmssName'), '-ipconfig')]",
-    "blueBackendPoolName": "[concat(parameters('jobName'), '-blue')]",
-    "greenBackendPoolName": "[concat(parameters('jobName'), '-green')]",
-    "httpProbeName": "httpProbe",
     "service": "service1",
     "usecase": "usecase1",
     "billing": "billing1"
